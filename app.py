@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import sklearn
+import numpy as np
 
 # Load the trained model
 @st.cache_resource
@@ -16,11 +17,12 @@ def load_model():
 model = load_model()
 
 # Check model compatibility
+expected_features = []
 if model:
     st.sidebar.write("✅ Model loaded successfully!")
     expected_features = getattr(model, 'feature_names_in_', [])
-else:
-    expected_features = []
+    if isinstance(expected_features, np.ndarray):
+        expected_features = expected_features.tolist()
 
 # Streamlit App UI
 st.title("🚗 Used Car Price Estimator")
@@ -30,17 +32,22 @@ st.write("Fill in the details below to predict the car price.")
 user_input = {}
 columns = ["year", "mileage", "engine_size", "horsepower", "fuel_type", "brand"]  # Adjust as per dataset
 
+default_brands = ["Toyota", "Ford", "BMW", "Honda", "Audi", "Mercedes"]
+default_fuels = ["Petrol", "Diesel", "Electric", "Hybrid"]
+
 for col in columns:
     if col in ["year", "mileage", "horsepower", "engine_size"]:
-        user_input[col] = st.number_input(f"Enter {col.replace('_', ' ').title()}", min_value=0, step=1)
-    else:
-        user_input[col] = st.selectbox(f"Select {col.replace('_', ' ').title()}", ["Toyota", "Ford", "BMW", "Honda"])  # Modify options
+        user_input[col] = st.number_input(f"Enter {col.replace('_', ' ').title()}", min_value=0, step=1, format="%d")
+    elif col == "brand":
+        user_input[col] = st.selectbox("Select Car Brand", default_brands)
+    elif col == "fuel_type":
+        user_input[col] = st.selectbox("Select Fuel Type", default_fuels)
 
 # Convert input to DataFrame
 single_entry_df = pd.DataFrame([user_input])
 
 # Ensure input feature order matches model
-if expected_features:
+if len(expected_features) > 0:
     single_entry_df = single_entry_df.reindex(columns=expected_features, fill_value=0)
 
 # Display features for debugging
