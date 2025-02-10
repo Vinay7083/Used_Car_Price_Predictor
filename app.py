@@ -2,7 +2,9 @@ import streamlit as st
 import pickle
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.preprocessing import OneHotEncoder
+import PIL
 from PIL import Image  # Required to process the image
 import joblib
 
